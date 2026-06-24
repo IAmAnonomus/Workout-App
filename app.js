@@ -10,6 +10,15 @@ const workoutPlan = {
     { name: "Push-up", reps: 10, sets: 3, image: "images/pushup.jpg" },
     { name: "Pike push-up", reps: 8, sets: 3, image: "images/pike.jpg" },
     { name: "Hollow hold", reps: 40, sets: 2, image: "images/hollow.jpg" }
+  ],
+
+  Tuesday: [
+    { name: "Bicycle crunch", reps: 20, sets: 3, image: "images/bicycle.jpg" },
+    { name: "Side plank dips", reps: 12, sets: 3, image: "images/sideplank.jpg" },
+    { name: "V-up", reps: 10, sets: 3, image: "images/vup.jpg" },
+    { name: "Dip", reps: 10, sets: 3, image: "images/dip.jpg" },
+    { name: "Inverted row", reps: 10, sets: 3, image: "images/row.jpg" },
+    { name: "Plank shoulder tap", reps: 30, sets: 2, image: "images/planktap.jpg" }
   ]
 };
 
@@ -35,8 +44,13 @@ function getWorkout() {
   return workoutPlan[getToday()] || workoutPlan.Monday;
 }
 
+function isLastExercise() {
+  const workout = getWorkout();
+  return state.exerciseIndex === workout.length - 1;
+}
+
 // --------------------
-// UI LOAD
+// UI UPDATE
 // --------------------
 
 function loadExercise() {
@@ -44,7 +58,6 @@ function loadExercise() {
   const ex = workout[state.exerciseIndex];
 
   if (!ex) {
-    showFinish();
     return;
   }
 
@@ -57,36 +70,17 @@ function loadExercise() {
   document.getElementById("exerciseReps").innerText =
     adjustedReps + " reps";
 
-  document.getElementById("controls").classList.remove("hidden");
-  document.getElementById("finishBtn").classList.add("hidden");
-}
+  // If LAST EXERCISE AND LAST SET → show FINISH ONLY
+  const lastSet = state.setIndex >= ex.sets - 1;
 
-// --------------------
-// NEXT BUTTON
-// --------------------
-
-document.getElementById("nextBtn").onclick = () => {
-  const workout = getWorkout();
-  const ex = workout[state.exerciseIndex];
-
-  state.setIndex++;
-
-  if (state.setIndex >= ex.sets) {
-    state.setIndex = 0;
-    state.exerciseIndex++;
+  if (isLastExercise() && lastSet) {
+    document.getElementById("controls").classList.add("hidden");
+    document.getElementById("finishBtn").classList.remove("hidden");
+  } else {
+    document.getElementById("controls").classList.remove("hidden");
+    document.getElementById("finishBtn").classList.add("hidden");
   }
-
-  loadExercise();
-};
-
-// --------------------
-// ADD REP BUTTON (NEW FEATURE)
-// --------------------
-
-document.getElementById("addRepsBtn").onclick = () => {
-  state.repModifier += 1;
-  loadExercise();
-};
+}
 
 // --------------------
 // START
@@ -104,7 +98,25 @@ document.getElementById("startBtn").onclick = () => {
 };
 
 // --------------------
-// END WORKOUT
+// NEXT BUTTON (SET + EXERCISE FLOW)
+// --------------------
+
+document.getElementById("nextBtn").onclick = () => {
+  const workout = getWorkout();
+  const ex = workout[state.exerciseIndex];
+
+  state.setIndex++;
+
+  if (state.setIndex >= ex.sets) {
+    state.setIndex = 0;
+    state.exerciseIndex++;
+  }
+
+  loadExercise();
+};
+
+// --------------------
+// END BUTTON
 // --------------------
 
 document.getElementById("endBtn").onclick = () => {
@@ -112,16 +124,20 @@ document.getElementById("endBtn").onclick = () => {
   document.getElementById("home").classList.remove("hidden");
 };
 
+// --------------------
+// FINISH BUTTON
+// --------------------
+
 document.getElementById("finishBtn").onclick = () => {
   document.getElementById("workout").classList.add("hidden");
   document.getElementById("home").classList.remove("hidden");
 };
 
 // --------------------
-// FINISH LOGIC
+// ADD REP (GLOBAL MODIFIER)
 // --------------------
 
-function showFinish() {
-  document.getElementById("controls").classList.add("hidden");
-  document.getElementById("finishBtn").classList.remove("hidden");
-}
+document.getElementById("addRepsBtn").onclick = () => {
+  state.repModifier += 1;
+  loadExercise();
+};
