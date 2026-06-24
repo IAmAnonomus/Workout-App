@@ -21,7 +21,8 @@ const workoutPlan = {
 let state = {
   exerciseIndex: 0,
   setIndex: 0,
-  repModifier: 0
+  repModifier: 0,
+  active: false
 };
 
 function getToday() {
@@ -32,9 +33,21 @@ function getWorkout() {
   return workoutPlan[getToday()] || workoutPlan.Monday;
 }
 
+function currentExercise(workout) {
+  return workout[state.exerciseIndex];
+}
+
+function isLastExercise(workout) {
+  return state.exerciseIndex === workout.length - 1;
+}
+
+function isLastSet(ex) {
+  return state.setIndex === ex.sets - 1;
+}
+
 function render() {
   const workout = getWorkout();
-  const ex = workout[state.exerciseIndex];
+  const ex = currentExercise(workout);
 
   if (!ex) return;
 
@@ -46,25 +59,17 @@ function render() {
 
   document.getElementById("exerciseReps").innerText = value + " " + unit;
 
-  const isLastExercise = state.exerciseIndex === workout.length - 1;
-  const isLastSet = state.setIndex === ex.sets - 1;
+  const showFinish = isLastExercise(workout) && isLastSet(ex);
 
-  const controls = document.getElementById("controls");
-  const finishBtn = document.getElementById("finishBtn");
-
-  if (isLastExercise && isLastSet) {
-    controls.style.display = "none";
-    finishBtn.style.display = "block";
-  } else {
-    controls.style.display = "block";
-    finishBtn.style.display = "none";
-  }
+  document.getElementById("controls").style.display = showFinish ? "none" : "block";
+  document.getElementById("finishBtn").style.display = showFinish ? "block" : "none";
 }
 
 document.getElementById("startBtn").onclick = () => {
   state.exerciseIndex = 0;
   state.setIndex = 0;
   state.repModifier = 0;
+  state.active = true;
 
   document.getElementById("home").style.display = "none";
   document.getElementById("workout").style.display = "block";
@@ -74,10 +79,14 @@ document.getElementById("startBtn").onclick = () => {
 
 document.getElementById("nextBtn").onclick = () => {
   const workout = getWorkout();
-  const ex = workout[state.exerciseIndex];
+  const ex = currentExercise(workout);
 
+  if (!ex) return;
+
+  // move set forward FIRST
   state.setIndex++;
 
+  // if finished all sets → next exercise
   if (state.setIndex >= ex.sets) {
     state.setIndex = 0;
     state.exerciseIndex++;
@@ -97,6 +106,6 @@ document.getElementById("finishBtn").onclick = () => {
 };
 
 document.getElementById("addRepsBtn").onclick = () => {
-  state.repModifier += 1;
+  state.repModifier++;
   render();
 };
