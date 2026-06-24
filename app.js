@@ -4,21 +4,21 @@
 
 const workoutPlan = {
   Monday: [
-    { name: "Dead bug", reps: "3×10 per side", image: "images/deadbug.jpg" },
-    { name: "Reverse crunch", reps: "3×15", image: "images/reversecrunch.jpg" },
-    { name: "Straight-leg raise", reps: "3×12", image: "images/legraise.jpg" },
-    { name: "Push-up", reps: "3×max reps", image: "images/pushup.jpg" },
-    { name: "Pike push-up", reps: "3×8–12", image: "images/pike.jpg" },
-    { name: "Hollow hold", reps: "2×40 sec", image: "images/hollow.jpg" }
+    { name: "Dead bug", reps: "10 per side", sets: 3, image: "images/deadbug.jpg" },
+    { name: "Reverse crunch", reps: "15", sets: 3, image: "images/reversecrunch.jpg" },
+    { name: "Straight-leg raise", reps: "12", sets: 3, image: "images/legraise.jpg" },
+    { name: "Push-up", reps: "max reps", sets: 3, image: "images/pushup.jpg" },
+    { name: "Pike push-up", reps: "8–12", sets: 3, image: "images/pike.jpg" },
+    { name: "Hollow hold", reps: "40 sec", sets: 2, image: "images/hollow.jpg" }
   ],
 
   Tuesday: [
-    { name: "Bicycle crunch", reps: "3×20", image: "images/bicycle.jpg" },
-    { name: "Side plank dips", reps: "3×12/side", image: "images/sideplank.jpg" },
-    { name: "V-up", reps: "3×10", image: "images/vup.jpg" },
-    { name: "Dip", reps: "3×max reps", image: "images/dip.jpg" },
-    { name: "Inverted row", reps: "3×8–12", image: "images/row.jpg" },
-    { name: "Plank shoulder tap", reps: "2×30 taps", image: "images/planktap.jpg" }
+    { name: "Bicycle crunch", reps: "20", sets: 3, image: "images/bicycle.jpg" },
+    { name: "Side plank dips", reps: "12 per side", sets: 3, image: "images/sideplank.jpg" },
+    { name: "V-up", reps: "10", sets: 3, image: "images/vup.jpg" },
+    { name: "Dip", reps: "max reps", sets: 3, image: "images/dip.jpg" },
+    { name: "Inverted row", reps: "8–12", sets: 3, image: "images/row.jpg" },
+    { name: "Plank shoulder tap", reps: "30 taps", sets: 2, image: "images/planktap.jpg" }
   ]
 };
 
@@ -28,7 +28,8 @@ const workoutPlan = {
 
 let state = {
   day: getToday(),
-  index: 0,
+  exerciseIndex: 0,
+  setIndex: 0,
   inWorkout: false
 };
 
@@ -48,7 +49,7 @@ function saveData(data) {
 }
 
 // --------------------
-// DATE HELPERS
+// DATE
 // --------------------
 
 function getToday() {
@@ -56,7 +57,7 @@ function getToday() {
 }
 
 // --------------------
-// STREAK LOGIC
+// STREAK
 // --------------------
 
 function markCompletedToday() {
@@ -79,7 +80,7 @@ function markCompletedToday() {
 }
 
 // --------------------
-// WORKOUT FLOW
+// WORKOUT
 // --------------------
 
 function getWorkoutForToday() {
@@ -88,15 +89,27 @@ function getWorkoutForToday() {
 
 function loadExercise() {
   const workout = getWorkoutForToday();
-  const ex = workout[state.index];
+  const ex = workout[state.exerciseIndex];
 
   if (!ex) {
     showFinish();
     return;
   }
 
-  document.getElementById("exerciseName").innerText = ex.name;
-  document.getElementById("exerciseReps").innerText = ex.reps;
+  // If sets complete → next exercise
+  if (state.setIndex >= ex.sets) {
+    state.exerciseIndex++;
+    state.setIndex = 0;
+    loadExercise();
+    return;
+  }
+
+  document.getElementById("exerciseName").innerText =
+    ex.name + ` (Set ${state.setIndex + 1}/${ex.sets})`;
+
+  document.getElementById("exerciseReps").innerText =
+    ex.reps;
+
   document.getElementById("exerciseImg").src = ex.image;
 
   document.getElementById("controls").classList.remove("hidden");
@@ -104,7 +117,7 @@ function loadExercise() {
 }
 
 // --------------------
-// UI UPDATE
+// UI
 // --------------------
 
 function updateUI() {
@@ -122,8 +135,9 @@ function updateUI() {
 // --------------------
 
 document.getElementById("startBtn").onclick = () => {
+  state.exerciseIndex = 0;
+  state.setIndex = 0;
   state.inWorkout = true;
-  state.index = 0;
 
   document.getElementById("home").classList.add("hidden");
   document.getElementById("workout").classList.remove("hidden");
@@ -136,7 +150,7 @@ document.getElementById("startBtn").onclick = () => {
 // --------------------
 
 document.getElementById("nextBtn").onclick = () => {
-  state.index++;
+  state.setIndex++;
   loadExercise();
 };
 
@@ -147,10 +161,12 @@ document.getElementById("endBtn").onclick = () => {
 document.getElementById("finishBtn").onclick = () => {
   markCompletedToday();
 
+  state.exerciseIndex = 0;
+  state.setIndex = 0;
+
   document.getElementById("workout").classList.add("hidden");
   document.getElementById("home").classList.remove("hidden");
 
-  state.index = 0;
   updateUI();
 };
 
@@ -159,10 +175,11 @@ document.getElementById("finishBtn").onclick = () => {
 // --------------------
 
 function exitWorkout() {
+  state.exerciseIndex = 0;
+  state.setIndex = 0;
+
   document.getElementById("workout").classList.add("hidden");
   document.getElementById("home").classList.remove("hidden");
-
-  state.index = 0;
 }
 
 // --------------------
