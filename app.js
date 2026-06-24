@@ -1,7 +1,3 @@
-// --------------------
-// WORKOUT DATA
-// --------------------
-
 const workoutPlan = {
   Monday: [
     { name: "Dead bug", type: "reps", value: 10, sets: 3, image: "images/deadbug.jpg" },
@@ -22,67 +18,41 @@ const workoutPlan = {
   ]
 };
 
-// --------------------
-// STATE
-// --------------------
-
 let state = {
   exerciseIndex: 0,
   setIndex: 0,
-  repModifier: 0,
-  started: false
+  repModifier: 0
 };
 
-// --------------------
-// DAY SAFE FETCH (FIXED)
-// --------------------
-
 function getToday() {
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  return days[new Date().getDay()];
+  return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
 }
 
 function getWorkout() {
-  const day = getToday();
-  return workoutPlan[day] || workoutPlan.Monday;
+  return workoutPlan[getToday()] || workoutPlan.Monday;
 }
-
-// --------------------
-// SAFE RENDER
-// --------------------
 
 function render() {
   const workout = getWorkout();
-
-  if (!workout || workout.length === 0) return;
-
   const ex = workout[state.exerciseIndex];
 
   if (!ex) return;
 
-  const nameEl = document.getElementById("exerciseName");
-  const imgEl = document.getElementById("exerciseImg");
-  const repsEl = document.getElementById("exerciseReps");
+  document.getElementById("exerciseName").innerText = ex.name;
+  document.getElementById("exerciseImg").src = ex.image;
 
-  if (!nameEl || !imgEl || !repsEl) return;
-
-  nameEl.innerText = ex.name;
-  imgEl.src = ex.image;
-
-  const adjusted = ex.value + state.repModifier;
+  const value = ex.value + state.repModifier;
   const unit = ex.type === "sec" ? "sec" : "reps";
 
-  repsEl.innerText = adjusted + " " + unit;
+  document.getElementById("exerciseReps").innerText = value + " " + unit;
 
-  const lastExercise = state.exerciseIndex === workout.length - 1;
-  const lastSet = state.setIndex >= ex.sets - 1;
+  const isLastExercise = state.exerciseIndex === workout.length - 1;
+  const isLastSet = state.setIndex === ex.sets - 1;
 
   const controls = document.getElementById("controls");
   const finishBtn = document.getElementById("finishBtn");
 
-  if (!controls || !finishBtn) return;
-
-  if (lastExercise && lastSet) {
+  if (isLastExercise && isLastSet) {
     controls.style.display = "none";
     finishBtn.style.display = "block";
   } else {
@@ -91,36 +61,20 @@ function render() {
   }
 }
 
-// --------------------
-// START (FIXED VISIBILITY)
-// --------------------
-
 document.getElementById("startBtn").onclick = () => {
   state.exerciseIndex = 0;
   state.setIndex = 0;
   state.repModifier = 0;
-  state.started = true;
 
-  const home = document.getElementById("home");
-  const workout = document.getElementById("workout");
-
-  if (!home || !workout) return;
-
-  home.style.display = "none";
-  workout.style.display = "block";
+  document.getElementById("home").style.display = "none";
+  document.getElementById("workout").style.display = "block";
 
   render();
 };
 
-// --------------------
-// NEXT (FIXED FLOW)
-// --------------------
-
 document.getElementById("nextBtn").onclick = () => {
   const workout = getWorkout();
   const ex = workout[state.exerciseIndex];
-
-  if (!ex) return;
 
   state.setIndex++;
 
@@ -132,27 +86,15 @@ document.getElementById("nextBtn").onclick = () => {
   render();
 };
 
-// --------------------
-// END
-// --------------------
-
 document.getElementById("endBtn").onclick = () => {
   document.getElementById("workout").style.display = "none";
   document.getElementById("home").style.display = "block";
 };
 
-// --------------------
-// FINISH
-// --------------------
-
 document.getElementById("finishBtn").onclick = () => {
   document.getElementById("workout").style.display = "none";
   document.getElementById("home").style.display = "block";
 };
-
-// --------------------
-// ADD REP
-// --------------------
 
 document.getElementById("addRepsBtn").onclick = () => {
   state.repModifier += 1;
