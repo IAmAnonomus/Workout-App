@@ -4,21 +4,21 @@
 
 const workoutPlan = {
   Monday: [
-    { name: "Dead bug", reps: 10, sets: 3, image: "images/deadbug.jpg" },
-    { name: "Reverse crunch", reps: 15, sets: 3, image: "images/reversecrunch.jpg" },
-    { name: "Straight-leg raise", reps: 12, sets: 3, image: "images/legraise.jpg" },
-    { name: "Push-up", reps: 10, sets: 3, image: "images/pushup.jpg" },
-    { name: "Pike push-up", reps: 8, sets: 3, image: "images/pike.jpg" },
-    { name: "Hollow hold", reps: 40, sets: 2, image: "images/hollow.jpg" }
+    { name: "Dead bug", type: "reps", value: 10, sets: 3, image: "images/deadbug.jpg" },
+    { name: "Reverse crunch", type: "reps", value: 15, sets: 3, image: "images/reversecrunch.jpg" },
+    { name: "Straight-leg raise", type: "reps", value: 12, sets: 3, image: "images/legraise.jpg" },
+    { name: "Push-up", type: "reps", value: 10, sets: 3, image: "images/pushup.jpg" },
+    { name: "Pike push-up", type: "reps", value: 8, sets: 3, image: "images/pike.jpg" },
+    { name: "Hollow hold", type: "sec", value: 40, sets: 2, image: "images/hollow.jpg" }
   ],
 
   Tuesday: [
-    { name: "Bicycle crunch", reps: 20, sets: 3, image: "images/bicycle.jpg" },
-    { name: "Side plank dips", reps: 12, sets: 3, image: "images/sideplank.jpg" },
-    { name: "V-up", reps: 10, sets: 3, image: "images/vup.jpg" },
-    { name: "Dip", reps: 10, sets: 3, image: "images/dip.jpg" },
-    { name: "Inverted row", reps: 10, sets: 3, image: "images/row.jpg" },
-    { name: "Plank shoulder tap", reps: 30, sets: 2, image: "images/planktap.jpg" }
+    { name: "Bicycle crunch", type: "reps", value: 20, sets: 3, image: "images/bicycle.jpg" },
+    { name: "Side plank dips", type: "reps", value: 12, sets: 3, image: "images/sideplank.jpg" },
+    { name: "V-up", type: "reps", value: 10, sets: 3, image: "images/vup.jpg" },
+    { name: "Dip", type: "reps", value: 10, sets: 3, image: "images/dip.jpg" },
+    { name: "Inverted row", type: "reps", value: 10, sets: 3, image: "images/row.jpg" },
+    { name: "Plank shoulder tap", type: "reps", value: 30, sets: 2, image: "images/planktap.jpg" }
   ]
 };
 
@@ -29,11 +29,12 @@ const workoutPlan = {
 let state = {
   exerciseIndex: 0,
   setIndex: 0,
-  repModifier: 0
+  repModifier: 0,
+  workoutStarted: false
 };
 
 // --------------------
-// HELPERS
+// TIME / DAY
 // --------------------
 
 function getToday() {
@@ -44,42 +45,42 @@ function getWorkout() {
   return workoutPlan[getToday()] || workoutPlan.Monday;
 }
 
-function isLastExercise() {
-  const workout = getWorkout();
+// --------------------
+// CORE HELPERS
+// --------------------
+
+function isLastExercise(workout) {
   return state.exerciseIndex === workout.length - 1;
+}
+
+function isLastSet(ex) {
+  return state.setIndex >= ex.sets - 1;
 }
 
 // --------------------
 // UI UPDATE
 // --------------------
 
-function loadExercise() {
+function render() {
   const workout = getWorkout();
   const ex = workout[state.exerciseIndex];
 
-  if (!ex) {
-    return;
-  }
+  if (!ex) return;
 
   document.getElementById("exerciseName").innerText = ex.name;
-
   document.getElementById("exerciseImg").src = ex.image;
 
-  const adjustedReps = ex.reps + state.repModifier;
+  const adjusted = ex.value + state.repModifier;
+
+  const unit = ex.type === "sec" ? "sec" : "reps";
 
   document.getElementById("exerciseReps").innerText =
-    adjustedReps + " reps";
+    adjusted + " " + unit;
 
-  // If LAST EXERCISE AND LAST SET → show FINISH ONLY
-  const lastSet = state.setIndex >= ex.sets - 1;
+  const last = isLastExercise(workout) && isLastSet(ex);
 
-  if (isLastExercise() && lastSet) {
-    document.getElementById("controls").classList.add("hidden");
-    document.getElementById("finishBtn").classList.remove("hidden");
-  } else {
-    document.getElementById("controls").classList.remove("hidden");
-    document.getElementById("finishBtn").classList.add("hidden");
-  }
+  document.getElementById("controls").style.display = last ? "none" : "block";
+  document.getElementById("finishBtn").style.display = last ? "block" : "none";
 }
 
 // --------------------
@@ -90,15 +91,16 @@ document.getElementById("startBtn").onclick = () => {
   state.exerciseIndex = 0;
   state.setIndex = 0;
   state.repModifier = 0;
+  state.workoutStarted = true;
 
-  document.getElementById("home").classList.add("hidden");
-  document.getElementById("workout").classList.remove("hidden");
+  document.getElementById("home").style.display = "none";
+  document.getElementById("workout").style.display = "block";
 
-  loadExercise();
+  render();
 };
 
 // --------------------
-// NEXT BUTTON (SET + EXERCISE FLOW)
+// NEXT (CRITICAL FLOW)
 // --------------------
 
 document.getElementById("nextBtn").onclick = () => {
@@ -112,25 +114,25 @@ document.getElementById("nextBtn").onclick = () => {
     state.exerciseIndex++;
   }
 
-  loadExercise();
+  render();
 };
 
 // --------------------
-// END BUTTON
+// END
 // --------------------
 
 document.getElementById("endBtn").onclick = () => {
-  document.getElementById("workout").classList.add("hidden");
-  document.getElementById("home").classList.remove("hidden");
+  document.getElementById("workout").style.display = "none";
+  document.getElementById("home").style.display = "block";
 };
 
 // --------------------
-// FINISH BUTTON
+// FINISH
 // --------------------
 
 document.getElementById("finishBtn").onclick = () => {
-  document.getElementById("workout").classList.add("hidden");
-  document.getElementById("home").classList.remove("hidden");
+  document.getElementById("workout").style.display = "none";
+  document.getElementById("home").style.display = "block";
 };
 
 // --------------------
@@ -139,5 +141,5 @@ document.getElementById("finishBtn").onclick = () => {
 
 document.getElementById("addRepsBtn").onclick = () => {
   state.repModifier += 1;
-  loadExercise();
+  render();
 };
